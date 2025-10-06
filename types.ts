@@ -5,4 +5,5 @@ export interface Channel {
   logo: string | null;
   group: string;
   url: string;
+  country: string;
 }

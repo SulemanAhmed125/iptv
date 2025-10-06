@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useIptv } from './hooks/useIptv';
 import { Channel } from './types';
@@ -30,7 +31,7 @@ const getSimplifiedGroup = (originalGroup: string): string => {
     }
   }
   
-  // Group everything else, like country-specific channels, into a general category.
+  // Group everything else into a general category.
   return 'General';
 };
 
@@ -55,23 +56,34 @@ const App: React.FC = () => {
       (channel) =>
         channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         channel.group.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        getSimplifiedGroup(channel.group).toLowerCase().includes(searchTerm.toLowerCase())
+        channel.country.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const groups: Record<string, Channel[]> = {};
     for (const channel of filtered) {
         const simpleGroup = getSimplifiedGroup(channel.group);
-        if (!groups[simpleGroup]) {
-            groups[simpleGroup] = [];
+        const finalGroupName = `${channel.country} - ${simpleGroup}`;
+        if (!groups[finalGroupName]) {
+            groups[finalGroupName] = [];
         }
-        groups[simpleGroup].push(channel);
+        groups[finalGroupName].push(channel);
     }
     
     return Object.entries(groups)
         .sort(([groupA], [groupB]) => {
-            // Keep 'General' group at the bottom
-            if (groupA === 'General') return 1;
-            if (groupB === 'General') return -1;
+            // First sort by country
+            const countryA = groupA.split(' - ')[0];
+            const countryB = groupB.split(' - ')[0];
+            const countryCompare = countryA.localeCompare(countryB);
+            if (countryCompare !== 0) return countryCompare;
+
+            // Then, within the same country, push 'General' categories to the bottom
+            const aIsGeneral = groupA.endsWith(' - General');
+            const bIsGeneral = groupB.endsWith(' - General');
+            if (aIsGeneral && !bIsGeneral) return 1;
+            if (!aIsGeneral && bIsGeneral) return -1;
+            
+            // Finally, sort alphabetically by the full group name
             return groupA.localeCompare(groupB);
         })
         .map(([groupName, channels]) => ({ groupName, channels }));
@@ -104,7 +116,7 @@ const App: React.FC = () => {
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-text-dim" />
               <input
                 type="text"
-                placeholder="Search channels & groups..."
+                placeholder="Search channels & countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-brand-bg border border-white/20 rounded-md pl-10 pr-4 py-2 text-brand-text focus:ring-2 focus:ring-brand-primary focus:border-brand-primary outline-none"
