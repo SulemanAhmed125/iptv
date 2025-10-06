@@ -1,0 +1,5 @@
+{
+  "name": "StreamFlow IPTV Player",
+  "description": "A modern, fast, and feature-rich IPTV player with built-in proxy support to access geo-locked channels. Load your M3U playlist and enjoy a smooth streaming experience.",
+  "requestFramePermissions": []
+}
